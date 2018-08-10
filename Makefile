@@ -8,11 +8,9 @@ CC = gcc
   CFLAGS += -Wall#                  # Enable base set of warnings
   CFLAGS += -Wextra#                # Enable additional warnings
   CFLAGS += -Werror#                # Treat warnings as errors
-  CFLAGS += -Wno-unused-parameter
-  CFLAGS += -Wno-unused-variable
-  CFLAGS += -Wno-missing-braces
 
-EXE = bin/ControlFileInput
+EXEDIR = $(if ${MyLocalPath}, ${MyLocalPath}, bin)
+EXE = $(EXEDIR)/ControlFileInput
 
 OBJ += main.o
 OBJ += GetSettingsControlFile.o
@@ -31,4 +29,4 @@ $(EXE): $(OBJ)
 
 
 clean:
-	rm $(OBJ) $(EXE)
+	rm -f $(OBJ) $(EXE)
