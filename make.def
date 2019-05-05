@@ -1,0 +1,19 @@
+# Executable name
+  EXENAME = ControlFileInput
+
+# Optimisation flags
+  OPT  = -Og -g
+
+# Additional libraries, includes and packages
+  LIB      = 
+  INC      = 
+  PACKAGES = 
+
+# Preprocessor flags
+  PPF = 
+
+# Source Files
+  SRC += main.c
+  SRC += GetSettingsControlFile.c
+  SRC += OutputSettings.c
+  SRC += ParseControlFile.c
