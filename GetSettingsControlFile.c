@@ -18,7 +18,7 @@ settings GetSettingsControlFile(char* inputfile, settings defaults){
     settings preferences = defaults;
 
 // create keyword list:
-    struct keywords keywordlist[] = {
+    keyword keywordlist[] = {
     // Boolian values:
         {"Analyze",                 0,  'a',  "" },
         {"Dipole",                  0,  'd',  "" },

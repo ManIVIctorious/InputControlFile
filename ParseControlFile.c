@@ -5,19 +5,22 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <errno.h>
+#include <stdarg.h>
 
 #include "typedefinitions.h"
 #include "controlfile.h"
 
+static void ThrowInputError(char* filename, int linenumber, char* format,...);
+static char * PreprocessBuffer(char* filename, int linenumber, char* buffer, const char* comment);
+
 // Provided prototypes
-int ControlFileParser(char* filename, struct keywords* keywordlist, int verbosity_flag);
+int ControlFileParser(char* filename, keyword* keywordlist, int verbosity_flag);
 
 
-int ControlFileParser(char* filename, struct keywords* keywordlist, int verbosity_flag){
+int ControlFileParser(char* filename, keyword* keywordlist, int verbosity_flag){
 
     long unsigned int i, j;
-    FILE * fd     = NULL;
-    char * buffer = NULL;
     const char * comment = "%#\n";
     char *token, *pos1, *pos2, *pos3;
 
@@ -26,26 +29,11 @@ int ControlFileParser(char* filename, struct keywords* keywordlist, int verbosit
     int linenumber;
     int control;
 
-    fd = fopen(filename, "r");
-    if(fd == NULL){
-        fprintf(stderr,
-            "\n (-) Error opening input-file: \"%s\""
-            "\n     Aborting..."
-            "\n\n"
-            , filename
-        );
-        exit(EXIT_FAILURE);
-    }
+    FILE * fd = fopen(filename, "r");
+    if(fd == NULL){ perror(filename); exit(errno); }
 
-    buffer = malloc((_MaxLineLength_) * sizeof(char));
-    if(buffer == NULL){
-        fprintf(stderr,
-            "\n (-) Error in memory allocation of buffer in control file input"
-            "\n     Aborting..."
-            "\n\n"
-        );
-        exit(EXIT_FAILURE);
-    }
+    char * buffer = malloc((_MaxLineLength_) * sizeof(char));
+    if(buffer == NULL){ perror("Control file buffer"); exit(errno); }
 
 
     linenumber = 0;
@@ -53,32 +41,8 @@ int ControlFileParser(char* filename, struct keywords* keywordlist, int verbosit
     while( (fgets(buffer, _MaxLineLength_, fd)) != NULL ){
 
         linenumber++;
-
-    // check for existence of newline character,
-    //  if not found the line is not fully inside of the buffer
-    //  and therefore exceeding maximum line length
-        for(i = 0, control = 0; i < strlen(buffer); ++i){
-            if(buffer[i] == '\n'){
-                control = 1;
-            }
-        }
-        if(control == 0){
-            fprintf(stderr,
-                "\n (-) Error in control file \"%s\", line \"%d\" is too long."
-                "\n     Aborting..."
-                "\n\n", filename, linenumber
-            );
-            exit(1);
-        }
-
-    // strip buffer from comments
-        token  = buffer;
-        pos1 = strsep(&token, comment);
-        if(pos1 == NULL) continue;
-
-    // remove leading white spaces and empty lines
-        while(isspace(*pos1) != 0 && *pos1 != '\0') { pos1++; }
-        if(strlen(pos1) < 1) continue;
+        pos1 = PreprocessBuffer(filename, linenumber, buffer, comment);
+        if(pos1 == NULL){ continue; }
 
 // buffer now contains a full (non empty) line of the control file, stripped of
 //  comments and *pos1 points to the first, non white space character of buffer
@@ -186,8 +150,8 @@ int ControlFileParser(char* filename, struct keywords* keywordlist, int verbosit
 
                             // pos3 now contains the value in raw character array form
                             //  copy value to keywordlist array and ensure \0 termination
-                                strncpy( (keywordlist [i] .value), pos3, (_MaxLineLength_ - 1));
-                                keywordlist[i].value[_MaxLineLength_ - 1] = '\0';
+                                strncpy( (keywordlist [i] .value), pos3, (_MaxEntryLength_ - 1));
+                                keywordlist[i].value[_MaxEntryLength_ - 1] = '\0';
 
 
                             // if verbosity flag is set: output found keywords and values
@@ -224,4 +188,64 @@ int ControlFileParser(char* filename, struct keywords* keywordlist, int verbosit
     free(buffer); buffer = NULL;
 
     return n_keywords_set;
+}
+
+
+static void ThrowInputError(char* filename, int linenumber, char* format,...){
+
+    fprintf(stderr,
+        "\n (-) Error in control file \"%s\", line (\"%d\")."
+        ,filename,linenumber
+    );
+
+    if( (format != NULL) && (strlen(format) > 0) ){
+        fprintf(stderr, "\n     ");
+        va_list ap;
+        va_start(ap, format);
+        vfprintf(stderr, format, ap);
+        va_end(ap);
+    }
+    fprintf(stderr, "\n     Please check your input.");
+    fprintf(stderr, "\n     Aborting...\n\n");
+
+    exit(EXIT_FAILURE);
+}
+
+
+static char * PreprocessBuffer(char* filename, int linenumber, char* buffer, const char* comment){
+
+    long unsigned i;
+    int control;
+    char * token;
+    char * pos;
+
+// check for existence of newline character,
+//  if not found the line is not fully inside of the buffer
+//  and therefore exceeding maximum line length
+    for(i = 0, control = 0; i < strlen(buffer); ++i){
+        if(buffer[i] == '\n') control = 1;
+    }
+    if(control == 0){
+        ThrowInputError(filename, linenumber,
+            "Line too long (no newline char '\\n' found)."
+        );
+    }
+
+// strip buffer from comments
+    token = buffer;
+    pos   = strsep(&token, comment);
+    if(pos == NULL){ return pos; }
+
+// to lower
+    i = 0;
+    while( pos[i] != '\0' ){
+        pos[i] = tolower(pos[i]);
+        ++i;
+    }
+
+// remove leading white spaces and empty lines
+    while( isspace( *pos ) && (*pos != '\0') ) { pos++; }
+    if(strlen(pos) < 1){ pos = NULL; }
+
+    return pos;
 }

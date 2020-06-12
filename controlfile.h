@@ -39,14 +39,15 @@
 #define _CONTROL_FILE_H
 
 #define _MaxLineLength_ 2048
+#define _MaxEntryLength_ 512
 
-struct keywords {
+typedef struct keyword {
     const char * keyword;
     int          set;
     const int    identifier;
-    char         value[_MaxLineLength_];
-};
+    char         value[_MaxEntryLength_];
+}keyword;
 
-int ControlFileParser(char* filename, struct keywords* keywordlist, int verbosity_flag);
+int ControlFileParser(char* filename, keyword* keywordlist, int verbosity_flag);
 
 #endif
