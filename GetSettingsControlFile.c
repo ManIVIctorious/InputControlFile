@@ -48,7 +48,7 @@ settings GetSettingsControlFile(char* inputfile, settings defaults){
     };
 
 // get keyword values
-    ControlFileParser(inputfile, keywordlist, 0);
+    ControlFileParser(inputfile, keywordlist);
 
 // assign values to variables
     i = 0;

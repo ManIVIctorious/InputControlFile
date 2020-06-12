@@ -48,6 +48,6 @@ typedef struct keyword {
     char         value[_MaxEntryLength_];
 }keyword;
 
-int ControlFileParser(char* filename, keyword* keywordlist, int verbosity_flag);
+int ControlFileParser(char* filename, keyword* keywordlist);
 
 #endif
