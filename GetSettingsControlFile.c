@@ -1,9 +1,12 @@
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "typedefinitions.h"
 #include "controlfile.h"
+#include "ConvertString.h"
+
 
 // Provided prototypes
 settings GetSettingsControlFile(char* inputfile, settings defaults);
@@ -65,75 +68,63 @@ settings GetSettingsControlFile(char* inputfile, settings defaults){
 
         // Boolian values
             case 'a':
-                preferences.analyze     = atoi(optarg);
-                if(preferences.analyze == 0){
-                    if(strncasecmp("true", optarg, 4) == 0) { preferences.analyze = 1; }
-                    else                                    { preferences.analyze = 0; }
-                }
+                preferences.analyze = convertstring_to_bool(optarg);
                 break;
 
             case 'd':
-                preferences.dipole      = atoi(optarg);
-                if(preferences.dipole == 0){
-                    if(strncasecmp("true", optarg, 4) == 0) { preferences.dipole = 1; }
-                    else                                    { preferences.dipole = 0; }
-                }
+                preferences.dipole  = convertstring_to_bool(optarg);
                 break;
 
             case 'T':
-                preferences.check_spacing = atoi(optarg);
-                if(preferences.check_spacing == 0){
-                    if(strncasecmp("true", optarg, 4) == 0) { preferences.check_spacing = 1; }
-                    else                                    { preferences.check_spacing = 0; }
-                }
+                preferences.check_spacing = convertstring_to_bool(optarg);
                 break;
 
 
         // integer values
             case 'D':
-                preferences.dimension   = atoi(optarg);
+                preferences.dimension = (int)convertstring_to_long(optarg);
                 break;
 
             case 'n':
-                preferences.n_stencil   = atoi(optarg);
+                preferences.n_stencil = (int)convertstring_to_long(optarg);
                 break;
 
             case 's':
-                preferences.n_spline    = atoi(optarg);
+                preferences.n_spline  = (int)convertstring_to_long(optarg);
                 break;
 
             case 'N':
-                preferences.n_out       = atoi(optarg);
+                preferences.n_out     = (int)convertstring_to_long(optarg);
                 break;
 
 
         // double values
             case 'k':
-                preferences.ekin_factor = atof(optarg);
+                preferences.ekin_factor = convertstring_to_double(optarg);
                 break;
 
             case 'v':
-                preferences.epot_factor = atof(optarg);
+                preferences.epot_factor = convertstring_to_double(optarg);
                 break;
 
             case 'f':
-                preferences.DipToAsm    = atof(optarg);
+                preferences.DipToAsm    = convertstring_to_double(optarg);
                 break;
 
             case 'M':
-                preferences.mu_factor   = atof(optarg);
+                preferences.mu_factor   = convertstring_to_double(optarg);
                 break;
 
             case 't':
-                preferences.threshold   = atof(optarg);
+                preferences.threshold   = convertstring_to_double(optarg);
                 break;
 
             case 'l':
-                preferences.e_min       = atof(optarg);
+                preferences.e_min       = convertstring_to_double(optarg);
                 break;
 
             case 'u':
-                preferences.e_max       = atof(optarg);
+                preferences.e_max       = convertstring_to_double(optarg);
                 break;
 
 
@@ -141,25 +132,38 @@ settings GetSettingsControlFile(char* inputfile, settings defaults){
             case 'm':
             // copy optarg to string and ensure zero termination
                 strncpy(preferences.masses_string, optarg, _MaxSettingsStringLength_);
-                preferences.masses_string[_MaxSettingsStringLength_ - 1] = '\0';
+                if(preferences.masses_string[_MaxSettingsStringLength_ - 1] != '\0'){
+                    fprintf(stderr, "String too long\n");
+                    exit(EXIT_FAILURE);
+                }
                 break;
 
             case 'i':
             // copy optarg to string and ensure zero termination
                 strncpy(preferences.input_file, optarg, _MaxSettingsStringLength_);
-                preferences.input_file[_MaxSettingsStringLength_ - 1] = '\0';
+                if(preferences.input_file[_MaxSettingsStringLength_ - 1] != '\0'){
+                    fprintf(stderr, "String too long\n");
+                    exit(EXIT_FAILURE);
+                }
+                break;
                 break;
 
             case 'c':
             // copy optarg to string and ensure zero termination
                 strncpy(preferences.coriolis_file, optarg, _MaxSettingsStringLength_);
-                preferences.coriolis_file[_MaxSettingsStringLength_ - 1] = '\0';
+                if(preferences.coriolis_file[_MaxSettingsStringLength_ - 1] != '\0'){
+                    fprintf(stderr, "String too long\n");
+                    exit(EXIT_FAILURE);
+                }
                 break;
 
             case 'o':
             // copy optarg to string and ensure zero termination
                 strncpy(preferences.output_file, optarg, _MaxSettingsStringLength_);
-                preferences.output_file[_MaxSettingsStringLength_ - 1] = '\0';
+                if(preferences.output_file[_MaxSettingsStringLength_ - 1] != '\0'){
+                    fprintf(stderr, "String too long\n");
+                    exit(EXIT_FAILURE);
+                }
                 break;
 
 
