@@ -13,14 +13,10 @@
 
 static void ThrowInputError(char* filename, int linenumber, char* format,...);
 static char * PreprocessBuffer(char* filename, int linenumber, char* buffer, const char* comment);
+static keyword* SetKeyValue(char* filename, int linenumber, keyword* keylist, char* kw, char* val);
 
-static int SetKeyValue(char* filename, int linenumber, keyword* keywordlist, char* kw, char* val);
-
-// Provided prototypes
-int ControlFileParser(char* filename, keyword* keywordlist);
-
-
-int ControlFileParser(char* filename, keyword* keywordlist){
+// Provided function:
+keyword* ControlFileParser(char* filename, keyword* keywordlist){
 
     const char * comment = "%#\n";
     char * token;
@@ -86,23 +82,24 @@ int ControlFileParser(char* filename, keyword* keywordlist){
                     *end = '\0';
                     eqsgn++;
 
-                    SetKeyValue(
-                        filename,
-                        linenumber,
-                        keywordlist,
-                        pos,
-                        eqsgn
-                    );
+                    keywordlist = SetKeyValue(
+                                      filename,
+                                      linenumber,
+                                      keywordlist,
+                                      pos,
+                                      eqsgn
+                                  );
                 }
 
             }
         }
     }
 
-// free memory
+// close file and free memory
+    fclose(fd);     fd   = NULL;
     free(buffer); buffer = NULL;
 
-    return 1;
+    return keywordlist;
 }
 
 
@@ -166,7 +163,7 @@ static char * PreprocessBuffer(char* filename, int linenumber, char* buffer, con
 }
 
 
-static int SetKeyValue(char* filename, int linenumber, keyword* keywordlist, char* kw, char* val){
+static keyword* SetKeyValue(char* filename, int linenumber, keyword* keylist, char* kw, char* val){
 
 //             val    '\0'
 //              ↓       ↓
@@ -181,10 +178,10 @@ static int SetKeyValue(char* filename, int linenumber, keyword* keywordlist, cha
     char * end;
 
 // iterate over list of keywords and check if found word is a valid keyword
-    while( (keywordlist [i] .keyword) != NULL ){
+    while( (keylist [i] .keyword) != NULL ){
 
     // check name of keyword
-        if( strcasecmp(keywordlist[i].keyword, kw) == 0 ){
+        if( strcasecmp(keylist[i].keyword, kw) == 0 ){
 
             ++keyword_recognised;
 
@@ -216,23 +213,30 @@ static int SetKeyValue(char* filename, int linenumber, keyword* keywordlist, cha
                 fprintf(stderr,
                     " (-) Warning: Control file \"%s\", line \"%d\": "
                     "Value of keyword \"%s\" contains white spaces\n"
-                    , filename, linenumber, keywordlist[i].keyword
+                    , filename, linenumber, keylist[i].keyword
                 );
             }
 
+        // A valid keyword = value pair has been found:
+        // allocate memory for the value buffer
+            keylist[i].value = realloc(keylist[i].value, (keylist[i].set+1)*sizeof(char*));
+            if(keylist[i].value == NULL){ perror("keylist"); exit(errno); }
+            keylist[i].value[keylist[i].set] = malloc(_MaxEntryLength_ * sizeof(char));
+            if(keylist[i].value[keylist[i].set] == NULL){ perror("keylist"); exit(errno); }
+
         // <val> now contains the value in raw character array form
-        //  copy value to keywordlist array and ensure \0 termination
-            strncpy( keywordlist[i].value, val, _MaxEntryLength_ );
-            if(keywordlist[i].value[_MaxEntryLength_ - 1] != '\0'){
+        //  copy value to keylist array and ensure \0 termination
+            strncpy( keylist[i].value[keylist[i].set], val, _MaxEntryLength_ );
+            if(keylist[i].value[keylist[i].set][_MaxEntryLength_ - 1] != '\0'){
                 ThrowInputError(filename, linenumber,
                     "Keyword \"%s\": Value exceeding maximum entry length (%d)."
                     , _MaxEntryLength_ - 1
                 );
             }
 
-        // keyword found: increment keywordlist[i].set and number of found
+        // keyword found: increment keylist[i].set and number of found
         // keywords, then break the loop keyword comparison loop
-            ++keywordlist[i].set;
+            ++keylist[i].set;
             break;
         }
 
@@ -248,5 +252,29 @@ static int SetKeyValue(char* filename, int linenumber, keyword* keywordlist, cha
         );
     }
 
-    return keyword_recognised;
+    return keylist;
+}
+
+
+
+
+void free_keywordlistvalues(keyword* keylist){
+
+    int i = 0;
+
+    while(keylist[i].keyword != NULL){
+
+        if(keylist[i].value != NULL){
+
+            for(int j = 0; j < keylist[i].set; ++j){
+                free(keylist[i].value[j]);
+                keylist[i].value[j] = NULL;
+            }
+            free(keylist[i].value);
+            keylist[i].value = NULL;
+
+        }
+        ++i;
+    }
+
 }

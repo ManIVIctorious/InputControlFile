@@ -18,50 +18,50 @@ settings GetSettingsControlFile(char* inputfile, settings defaults){
     settings preferences = defaults;
 
 // create keyword list:
-    keyword keywordlist[] = {
+    keyword keylist[] = {
     // Boolian values:
-        {"Analyze",                 0,  'a',  "" },
-        {"Dipole",                  0,  'd',  "" },
-        {"Check_Spacing",           0,  'T',  "" },
+        {"Analyze",                 0,  'a',  NULL },
+        {"Dipole",                  0,  'd',  NULL },
+        {"Check_Spacing",           0,  'T',  NULL },
     // integer values:
-        {"Dimensionality",          0,  'D',  "" },
-        {"Stencil_Size",            0,  'n',  "" },
-        {"Interpolation_points",    0,  's',  "" },
-        {"N_Eigenstates",           0,  'N',  "" },
+        {"Dimensionality",          0,  'D',  NULL },
+        {"Stencil_Size",            0,  'n',  NULL },
+        {"Interpolation_points",    0,  's',  NULL },
+        {"N_Eigenstates",           0,  'N',  NULL },
     // double values:
-        {"Kin_E_Factor",            0,  'k',  "" },
-        {"Pot_E_Factor",            0,  'v',  "" },
-        {"Dipole_Factor",           0,  'f',  "" },
-        {"IMOI_Factor",             0,  'M',  "" },
-        {"Spacing_Threshold",       0,  't',  "" },
-        {"Lower_Bound",             0,  'l',  "" },
-        {"Upper_Bound",             0,  'u',  "" },
+        {"Kin_E_Factor",            0,  'k',  NULL },
+        {"Pot_E_Factor",            0,  'v',  NULL },
+        {"Dipole_Factor",           0,  'f',  NULL },
+        {"IMOI_Factor",             0,  'M',  NULL },
+        {"Spacing_Threshold",       0,  't',  NULL },
+        {"Lower_Bound",             0,  'l',  NULL },
+        {"Upper_Bound",             0,  'u',  NULL },
     // string values:
-        {"Reduced_Masses",          0,  'm',  "" },
-        {"Input_File",              0,  'i',  "" },
-        {"Output_File",             0,  'o',  "" },
-        {"Coriolis_File",           0,  'c',  "" },
+        {"Reduced_Masses",          0,  'm',  NULL },
+        {"Input_File",              0,  'i',  NULL },
+        {"Output_File",             0,  'o',  NULL },
+        {"Coriolis_File",           0,  'c',  NULL },
     // other:
-        {"Eigensolver",             0,  'E',  "" },
+        {"Eigensolver",             0,  'E',  NULL },
     // requires zero termination
-        { 0 , 0 , 0 , "" }
+        { NULL , 0 , 0 , NULL }
     };
 
 // get keyword values
-    ControlFileParser(inputfile, keywordlist);
+    keyword * kl = ControlFileParser(inputfile, keylist);
 
 // assign values to variables
     i = 0;
-    while(keywordlist[i].keyword != NULL){
+    while(kl[i].keyword != NULL){
 
     // only iterate over the values set by the parsing function
-        if(strlen(keywordlist[i].value) == 0){
+        if( kl[i].value == NULL){
             ++i;
             continue;
         }
-        optarg = keywordlist[i].value;
+        optarg = kl[i].value[0];
 
-        switch(keywordlist[i].identifier){
+        switch(kl[i].identifier){
 
         // Boolian values
             case 'a':
@@ -180,6 +180,8 @@ settings GetSettingsControlFile(char* inputfile, settings defaults){
         }
         ++i;
     }
+
+    free_keywordlistvalues(kl);
 
 // return new settings struct preferences
     return preferences;

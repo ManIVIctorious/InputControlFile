@@ -110,5 +110,7 @@ fprintf(fd,
         "#\n#\n"
     );
 
+    free(Hostname); Hostname = NULL;
+
     return 0;
 }
