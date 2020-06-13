@@ -148,13 +148,6 @@ static char * PreprocessBuffer(char* filename, int linenumber, char* buffer, con
     pos   = strsep(&token, comment);
     if(pos == NULL){ return pos; }
 
-// to lower
-    i = 0;
-    while( pos[i] != '\0' ){
-        pos[i] = tolower(pos[i]);
-        ++i;
-    }
-
 // remove leading white spaces and empty lines
     while( isspace( *pos ) && (*pos != '\0') ) { pos++; }
     if(strlen(pos) < 1){ pos = NULL; }
